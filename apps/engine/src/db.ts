@@ -8,6 +8,7 @@ import type {
   FillRow,
   MarketRow,
   PnlSnapshotRow,
+  SweeperResultRow,
 } from "@certus/shared";
 
 const SCHEMA = `
@@ -73,6 +74,17 @@ create table if not exists agent_state (
   lastErrorAt integer,
   lastError text
 );
+create table if not exists sweeper_results (
+  id integer primary key autoincrement,
+  marketId text not null,
+  agentKind text not null,
+  outcomeIdx integer not null,
+  amount text not null,
+  txHash text not null,
+  rescued text not null,
+  createdAt integer not null
+);
+create index if not exists idx_sweeper_results on sweeper_results (agentKind, createdAt);
 `;
 
 export type Db = Database.Database;
@@ -209,6 +221,24 @@ export function getAgentPaused(db: Db, agentKind: AgentKind): boolean {
 export function marketCount(db: Db): number {
   const row = db.prepare(`select count(*) as n from markets`).get() as { n: number };
   return row.n;
+}
+
+export function insertSweeperResult(db: Db, row: SweeperResultRow): void {
+  db.prepare(
+    `insert into sweeper_results (marketId, agentKind, outcomeIdx, amount, txHash, rescued, createdAt)
+     values (@marketId, @agentKind, @outcomeIdx, @amount, @txHash, @rescued, @createdAt)`,
+  ).run(row);
+}
+
+export function rescuedTotals(db: Db): Record<string, bigint> {
+  const rows = db
+    .prepare(`select agentKind, sum(rescued) as total from sweeper_results group by agentKind`)
+    .all() as { agentKind: string; total: string | null }[];
+  const out: Record<string, bigint> = {};
+  for (const r of rows) {
+    out[r.agentKind] = BigInt(r.total ?? "0");
+  }
+  return out;
 }
 
 export function fillCount(db: Db): number {
