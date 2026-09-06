@@ -71,6 +71,7 @@ export async function startAgents(env: CertusEnv, db: Db): Promise<RunningAgent[
       lastError: null,
     });
     const harness = new Harness(exchange, db, env, config, def.kind, address);
+    let inFlight = false;
     const agent: RunningAgent = {
       kind: def.kind,
       address,
@@ -80,10 +81,14 @@ export async function startAgents(env: CertusEnv, db: Db): Promise<RunningAgent[
     };
 
     const tickSafe = async (): Promise<void> => {
+      if (inFlight) return;
+      inFlight = true;
       try {
         await strategy.tick(harness);
       } catch (err) {
         console.error(`[agent ${def.kind}] TICK FAILED: ${errText(err).split("\n")[0]}`);
+      } finally {
+        inFlight = false;
       }
     };
     agent.timer = setInterval(() => {

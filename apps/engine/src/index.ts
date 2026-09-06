@@ -32,9 +32,11 @@ async function main(): Promise<void> {
 
   let running = true;
   let cycle = 0;
+  let cycleInFlight = false;
 
   const tick = async (): Promise<void> => {
-    if (!running) return;
+    if (!running || cycleInFlight) return;
+    cycleInFlight = true;
     cycle += 1;
     const started = Date.now();
     try {
@@ -47,6 +49,8 @@ async function main(): Promise<void> {
       );
     } catch (err) {
       console.error(`[cycle ${cycle}] FATAL cycle error: ${errText(err)}`);
+    } finally {
+      cycleInFlight = false;
     }
   };
 
