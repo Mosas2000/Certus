@@ -42,13 +42,14 @@ top-of-book for the Up symbol. Exit code 0 = gate passed.
 
 | Issue | Phase | Ships |
 | --- | --- | --- |
-| Phase 0 gate | Scaffold + read-only connectivity | `pnpm doctor` green on a funded key |
-| Phase 1 | Engine core + SQLite data layer | markets, fills, balances, PnL persisted |
-| Phase 2 | Five agents + shared safety harness | live testnet fills per agent |
-| Phase 3 | Redemption sweeper | winnings rescued on Finalized markets |
-| Phase 4 | LLM agent + reasoning stream | DB rows: observation/thought/action/confidence |
-| Phase 5 | Web arena | live leaderboards, trade tapes, reasoning, receipts |
-| Phase 6 | Submission kit | README, demo script, feedback report |
+| [#1](https://github.com/Mosas2000/Certus/issues/1) | Phase 0 gate | `pnpm run doctor` green on a funded key |
+| [#2](https://github.com/Mosas2000/Certus/issues/2) | Phase 1 | Engine core + SQLite data layer: markets, fills, balances, PnL persisted |
+| [#3](https://github.com/Mosas2000/Certus/issues/3) | Phase 2 | Four classic agents + shared safety harness: live testnet fills per agent |
+| [#4](https://github.com/Mosas2000/Certus/issues/4) | Phase 3 | Redemption sweeper: winnings rescued on Finalized markets |
+| [#5](https://github.com/Mosas2000/Certus/issues/5) | Phase 4 | LLM agent + reasoning stream: observation/thought/action/confidence rows |
+| [#6](https://github.com/Mosas2000/Certus/issues/6) | Phase 5 | Web arena: live leaderboards, trade tapes, reasoning, receipts |
+| [#7](https://github.com/Mosas2000/Certus/issues/7) | Phase 6 | Submission kit: README, demo script, feedback report |
+| [#8](https://github.com/Mosas2000/Certus/issues/8) | Guardrails | The 12 hard constraints — applies to every phase, pinned |
 
 Phases 0–3 and Phase 5's arena home + leaderboard are the submission; the rest
 degrades gracefully but ships.
