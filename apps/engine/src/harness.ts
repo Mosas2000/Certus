@@ -236,7 +236,7 @@ export class Harness {
     if (price === null) {
       return { status: "skipped", reason: `price ${decision.prob.toFixed(3)} off-grid or outside (0,1)` };
     }
-    let quantity = this.desk.lots(decision.contracts, grid);
+    const quantity = this.desk.lots(decision.contracts, grid);
     if (quantity < grid.minQuantity || quantity === 0n) {
       return { status: "skipped", reason: `size ${decision.contracts} below venue minimum` };
     }
