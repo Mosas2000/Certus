@@ -13,6 +13,7 @@
   },
   "scripts": {
     "doctor": "tsx scripts/doctor.ts",
+    "agents:setup": "tsx scripts/agents-setup.ts",
     "dev": "pnpm --parallel -r dev",
     "start:engine": "pnpm --filter @certus/engine start",
     "build": "pnpm -r build",

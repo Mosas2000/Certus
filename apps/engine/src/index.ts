@@ -3,6 +3,7 @@ import { somniaShannon } from "@somnia-chain/markets-sdk/chains";
 import { AGENTS, errText, loadEnv, withRetry } from "@certus/shared";
 import { marketCount, openDb } from "./db.js";
 import { runCycle } from "./poller.js";
+import { startAgents, stopAgents, type RunningAgent } from "./agents/runner.js";
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -31,9 +32,11 @@ async function main(): Promise<void> {
 
   let running = true;
   let cycle = 0;
+  let cycleInFlight = false;
 
   const tick = async (): Promise<void> => {
-    if (!running) return;
+    if (!running || cycleInFlight) return;
+    cycleInFlight = true;
     cycle += 1;
     const started = Date.now();
     try {
@@ -46,6 +49,8 @@ async function main(): Promise<void> {
       );
     } catch (err) {
       console.error(`[cycle ${cycle}] FATAL cycle error: ${errText(err)}`);
+    } finally {
+      cycleInFlight = false;
     }
   };
 
@@ -54,12 +59,23 @@ async function main(): Promise<void> {
     void tick();
   }, env.pollIntervalMs);
 
+  const agents: RunningAgent[] = await startAgents(env, db);
+
+  let shuttingDown = false;
   const shutdown = (signal: string): void => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     running = false;
     clearInterval(timer);
     console.log(`certus engine stopping on ${signal}: markets=${marketCount(db)}`);
-    db.close();
-    process.exit(0);
+    void stopAgents(agents)
+      .catch((err) => {
+        console.error(`agent shutdown error: ${errText(err).split("\n")[0]}`);
+      })
+      .finally(() => {
+        db.close();
+        process.exit(0);
+      });
   };
 
   process.on("SIGINT", () => shutdown("SIGINT"));

@@ -192,6 +192,20 @@ export function setAgentError(db: Db, agentKind: AgentKind, message: string): vo
   ).run(Math.floor(Date.now() / 1000), message, agentKind);
 }
 
+export function setAgentPaused(db: Db, agentKind: AgentKind, paused: boolean): void {
+  db.prepare(`update agent_state set paused = ? where agentKind = ?`).run(
+    paused ? 1 : 0,
+    agentKind,
+  );
+}
+
+export function getAgentPaused(db: Db, agentKind: AgentKind): boolean {
+  const row = db
+    .prepare(`select paused from agent_state where agentKind = ?`)
+    .get(agentKind) as { paused: number } | undefined;
+  return row?.paused === 1;
+}
+
 export function marketCount(db: Db): number {
   const row = db.prepare(`select count(*) as n from markets`).get() as { n: number };
   return row.n;
