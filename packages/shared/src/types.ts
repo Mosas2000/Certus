@@ -55,48 +55,64 @@ export const AGENT_KINDS: readonly AgentKind[] = AGENTS.map((a) => a.kind);
 
 export type AssetSymbol = "BTC" | "ETH";
 
-export type MarketPhase = "Listed" | "Trading" | "Locked" | "Resolved" | "Finalized";
+export const WALLET_SNAPSHOT_MARKET_ID = "";
 
 export interface MarketRow {
   marketId: string;
   venueId: string;
   asset: string;
-  intervalSec: number;
-  strike: string | null;
+  intervalSec: number | null;
   tradingStart: number;
   expiry: number;
   status: string;
   pool: string;
-  lastPrice: number | null;
+  lastPrice: string | null;
+  lastPriceDecimals: number;
+  quoteDecimals: number;
   oracleQuestionId: string | null;
+  strike: string | null;
+  winningOutcome: number | null;
+  voided: boolean;
+  openingPrice: string | null;
+  closingPrice: string | null;
 }
 
 export interface FillRow {
+  id: string;
   marketId: string;
   agentKind: AgentKind;
   txHash: string;
   symbol: string;
   side: string;
-  price: number;
-  quantity: number;
+  price: string;
+  quantity: string;
+  quoteQuantity: string;
   filledAt: number;
 }
 
 export interface BalanceSnapshotRow {
   marketId: string;
   agentKind: AgentKind;
+  capturedAt: number;
   collateralBalance: string;
   yesBalance: string;
   noBalance: string;
-  capturedAt: number;
 }
 
 export interface PnlSnapshotRow {
   marketId: string;
   agentKind: AgentKind;
-  realized: number | null;
-  unrealized: number | null;
   capturedAt: number;
+  realized: string | null;
+  unrealized: string | null;
+}
+
+export interface AgentStateRow {
+  agentKind: AgentKind;
+  address: string;
+  paused: boolean;
+  lastErrorAt: number | null;
+  lastError: string | null;
 }
 
 export interface ReasoningRow {
