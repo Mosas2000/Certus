@@ -4,12 +4,13 @@ A verifiable AI-agent trading arena on DreamDEX Event Contracts (Somnia Shannon
 testnet, chain 50312). Four-to-five autonomous agents trade live BTC/ETH
 Up/Down binary markets; every fill, balance, and PnL is verifiable on-chain.
 
-**Status: scaffold (Phase 0).** The workspace, shared config, env handling, and
-the read-only `doctor` connectivity script are in. Everything else — engine
-core, agents, redemption sweeper, LLM reasoning stream, web arena, submission
-kit — is specified as GitHub issues on this repo, one per phase, in build
-order. Work them in sequence; each issue ends with an acceptance gate that must
-pass before the next one starts.
+**Status: Phase 1 shipped (engine core + SQLite data layer).** The workspace,
+shared config, env handling, the read-only `doctor` gate, and the engine
+(market poller + per-agent fills/balance/PnL ingestion + settlement resolution,
+persisted to SQLite keyed by `marketId`) are in. Agents, redemption sweeper,
+LLM reasoning stream, and the web arena are specified as GitHub issues, one per
+phase, in build order. Work them in sequence; each issue ends with an
+acceptance gate that must pass before the next one starts.
 
 ## Stack
 
@@ -25,7 +26,8 @@ pass before the next one starts.
 pnpm install
 cp .env.example .env      # add a funded testnet PRIVATE_KEY
 pnpm run doctor           # wallet, balances, live markets, books (note: bare `pnpm doctor` is pnpm's built-in, use `run`)
-pnpm dev                  # engine + web (stubs until the phase issues land)
+pnpm start:engine         # market poller + SQLite ingestion (data/certus.sqlite)
+pnpm dev                  # web arena (stub until the Phase 5 issue lands)
 ```
 
 Get testnet funds: STT from https://testnet.somnia.network and tUSDC from the
