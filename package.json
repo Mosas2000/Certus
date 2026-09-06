@@ -1,0 +1,36 @@
+{
+  "name": "certus",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "doctor": "tsx scripts/doctor.ts",
+    "dev": "pnpm --parallel -r dev",
+    "start:engine": "pnpm --filter @certus/engine start",
+    "build": "pnpm -r build",
+    "typecheck": "tsc --noEmit && pnpm -r typecheck",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@certus/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@somnia-chain/markets-sdk": "0.29.0",
+    "@types/node": "^26.4.1",
+    "eslint": "^9.39.5",
+    "globals": "^17.12.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.69.0",
+    "viem": "^2.56.3"
+  }
+}

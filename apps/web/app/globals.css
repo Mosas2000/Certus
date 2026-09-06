@@ -1,0 +1,122 @@
+:root {
+  color-scheme: dark;
+  --bg: #0a0e12;
+  --panel: #10161c;
+  --line: #1c2630;
+  --text: #d7e0e6;
+  --dim: #7d8a94;
+  --accent: #34d399;
+  --warn: #fbbf24;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  line-height: 1.5;
+}
+
+.shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.arena-header h1 {
+  font-size: 32px;
+  letter-spacing: 6px;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+.tagline {
+  color: var(--dim);
+  margin-top: 4px;
+}
+
+.status-pill {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 2px 10px;
+  border: 1px solid var(--warn);
+  border-radius: 999px;
+  color: var(--warn);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.agent-grid {
+  margin-top: 24px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .agent-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .agent-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.agent-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 16px;
+}
+
+.agent-glyph {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.agent-card h2 {
+  font-size: 15px;
+  margin-top: 6px;
+}
+
+.agent-desc {
+  color: var(--dim);
+  font-size: 12px;
+  margin-top: 4px;
+  min-height: 36px;
+}
+
+.agent-meta {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  font-size: 11px;
+}
+
+.agent-meta dt {
+  color: var(--dim);
+}
+
+.agent-meta dd {
+  text-align: right;
+}
+
+.arena-footer {
+  margin-top: 32px;
+  color: var(--dim);
+  font-size: 11px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
