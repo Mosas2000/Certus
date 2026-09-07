@@ -11,6 +11,7 @@ import { MomentumStrategy } from "./momentum.js";
 import { MeanReversionStrategy } from "./meanrev.js";
 import { MarketMakerStrategy } from "./maker.js";
 import { ChimpStrategy } from "./chimp.js";
+import { LlmStrategy } from "./llm.js";
 
 export interface RunningAgent {
   kind: AgentKind;
@@ -20,7 +21,12 @@ export interface RunningAgent {
   timer: NodeJS.Timeout;
 }
 
-function buildStrategy(kind: AgentKind, config: TradingConfig): AgentStrategy | null {
+function buildStrategy(
+  kind: AgentKind,
+  config: TradingConfig,
+  env: CertusEnv,
+  db: Db,
+): AgentStrategy | null {
   switch (kind) {
     case "momentum":
       return new MomentumStrategy(config);
@@ -30,6 +36,8 @@ function buildStrategy(kind: AgentKind, config: TradingConfig): AgentStrategy | 
       return new MarketMakerStrategy(config);
     case "chimp":
       return new ChimpStrategy(config);
+    case "llm":
+      return new LlmStrategy(config, env, db);
     default:
       return null;
   }
@@ -42,9 +50,8 @@ export async function startAgents(env: CertusEnv, db: Db): Promise<RunningAgent[
   for (const def of AGENTS) {
     const key = env.agentKeys[def.kind];
     if (!key) continue;
-    const strategy = buildStrategy(def.kind, config);
+    const strategy = buildStrategy(def.kind, config, env, db);
     if (!strategy) {
-      console.log(`[agent ${def.kind}] not started yet (ships in a later phase)`);
       continue;
     }
 
