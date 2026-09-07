@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
     "@certus/shared": "workspace:*",
     "@somnia-chain/markets-sdk": "0.29.0",
     "better-sqlite3": "^13.0.3",
