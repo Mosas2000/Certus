@@ -346,3 +346,118 @@ a:hover {
 .dim {
   color: var(--dim);
 }
+
+.agent-detail-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.agent-detail-head h1 {
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+
+.agent-address {
+  font-size: 11px;
+  color: var(--dim);
+  border-bottom: none;
+}
+
+.agent-detail-stats {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .agent-detail-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.agent-detail-stats .dim {
+  font-size: 10px;
+  display: block;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.table th {
+  text-align: left;
+  color: var(--dim);
+  font-weight: 400;
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.table td {
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.side-buy {
+  color: var(--accent);
+}
+
+.side-sell {
+  color: var(--warn);
+}
+
+.reasoning-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reasoning-row {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.reasoning-head {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 11px;
+}
+
+.reasoning-conf {
+  margin-left: auto;
+  color: var(--dim);
+}
+
+.reasoning-thought {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.reasoning-action {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.reasoning-obs {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--dim);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow: auto;
+}
+
+details summary {
+  cursor: pointer;
+  font-size: 10px;
+}
