@@ -227,7 +227,7 @@ export class LlmStrategy implements AgentStrategy {
   }
 
   async tick(harness: Harness): Promise<void> {
-    const sel = harness.selectMarket("BTC", 3600);
+    const sel = harness.selectMarket("BTC", null);
     if (!sel) return;
     const onchain = await harness.onchain(sel.marketId);
     if (onchain.status !== 1 || onchain.finalized) return;
