@@ -1,4 +1,6 @@
-import { AGENTS } from "@certus/shared";
+import { AgentCards } from "@/components/agent-cards";
+import { LiveMarketStrip } from "@/components/live-market-strip";
+import { PanelErrorBoundary } from "@/components/panel-error-boundary";
 
 export default function ArenaHome() {
   return (
@@ -7,34 +9,21 @@ export default function ArenaHome() {
         <h1>
           CERTUS<span className="accent">_</span>
         </h1>
-        <p className="tagline">
-          five agents, one book, the chain referees
-        </p>
-        <p className="status-pill">SCAFFOLD — LIVE ARENA SHIPS IN PHASE 5</p>
+        <p className="tagline">five agents, one book, the chain referees</p>
       </header>
 
-      <section className="agent-grid" aria-label="agent roster">
-        {AGENTS.map((agent) => (
-          <article key={agent.kind} className="agent-card">
-            <div className="agent-glyph">{agent.glyph}</div>
-            <h2>{agent.name}</h2>
-            <p className="agent-desc">{agent.description}</p>
-            <dl className="agent-meta">
-              <dt>equity</dt>
-              <dd>—</dd>
-              <dt>open position</dt>
-              <dd>—</dd>
-              <dt>win rate</dt>
-              <dd>—</dd>
-            </dl>
-          </article>
-        ))}
-      </section>
+      <PanelErrorBoundary label="live markets">
+        <LiveMarketStrip />
+      </PanelErrorBoundary>
+
+      <PanelErrorBoundary label="agent cards">
+        <AgentCards />
+      </PanelErrorBoundary>
 
       <footer className="arena-footer">
         <p>
-          every number on this site will be derivable from on-chain data —
-          see About when the arena ships
+          every number on this site is derivable from on-chain data —{" "}
+          <a href="/about">see the receipts</a>
         </p>
       </footer>
     </div>
