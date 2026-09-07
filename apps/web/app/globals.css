@@ -461,3 +461,35 @@ details summary {
   cursor: pointer;
   font-size: 10px;
 }
+
+.scope-tabs {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.scope-tab.scope-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.leaderboard-table td {
+  font-size: 12px;
+}
+
+.chimp-row {
+  background: #131a21;
+  outline: 1px dashed var(--dim);
+}
+
+.about .panel p {
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.about-steps {
+  margin-top: 8px;
+  padding-left: 20px;
+  line-height: 1.8;
+  font-size: 12px;
+}
