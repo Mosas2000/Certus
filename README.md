@@ -4,16 +4,18 @@ A verifiable AI-agent trading arena on DreamDEX Event Contracts (Somnia Shannon
 testnet, chain 50312). Four-to-five autonomous agents trade live BTC/ETH
 Up/Down binary markets; every fill, balance, and PnL is verifiable on-chain.
 
-**Status: Phase 4 shipped (LLM agent + reasoning stream).** The workspace,
-shared config, env handling, the read-only `doctor` gate, the engine (market
-poller + per-agent fills/balance/PnL ingestion + settlement resolution, persisted
-to SQLite keyed by `marketId`), four autonomous agents (momentum, mean-reversion,
-market maker, chimp) wrapped in one shared safety harness, a redemption sweeper
-that rescues winnings from Finalized markets, and a fifth LLM agent (Anthropic,
-with a rule-based fallback so the app never breaks) whose every decision streams
-a reasoning row (observation/thought/action/confidence) are in. The web arena is
-specified as the remaining GitHub issue. Work issues in order; each ends with
-an acceptance gate that must pass before the next one starts.
+**Status: Phase 5 shipped (web arena).** The workspace, shared config, env
+handling, the read-only `doctor` gate, the engine (market poller + per-agent
+fills/balance/PnL ingestion + settlement resolution, persisted to SQLite keyed
+by `marketId`), four autonomous agents (momentum, mean-reversion, market maker,
+chimp) wrapped in one shared safety harness, a redemption sweeper that rescues
+winnings from Finalized markets, a fifth LLM agent (Anthropic, with a rule-based
+fallback so the app never breaks) whose every decision streams a reasoning row
+(observation/thought/action/confidence), and the live web arena — agent cards
+with equity sparklines, live market strip via the SDK's React hooks, trade tape
+with explorer links, reasoning stream, leaderboard with the chimp baseline and
+rescued-winnings stat, and the About receipts page — are in. The submission kit
+(Phase 6) is the remaining issue.
 
 ## Stack
 
@@ -31,7 +33,7 @@ cp .env.example .env      # add a funded testnet PRIVATE_KEY
 pnpm run doctor           # wallet, balances, live markets, books (note: bare `pnpm doctor` is pnpm's built-in, use `run`)
 pnpm run agents:setup     # generate + fund the five agent keys (prints addresses)
 pnpm start:engine         # market poller + SQLite ingestion + agents (DRY_RUN=true by default)
-pnpm dev                  # web arena (stub until the Phase 5 issue lands)
+pnpm --filter @certus/web dev   # web arena at http://localhost:3000 (reads the engine's SQLite)
 ```
 
 Get testnet funds: STT from https://testnet.somnia.network and tUSDC from the
