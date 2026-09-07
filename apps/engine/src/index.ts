@@ -4,10 +4,12 @@ import { AGENTS, errText, loadEnv, withRetry } from "@certus/shared";
 import { marketCount, openDb } from "./db.js";
 import { runCycle } from "./poller.js";
 import { startAgents, stopAgents, type RunningAgent } from "./agents/runner.js";
+import { acquireEngineLock, releaseEngineLock } from "./lock.js";
 
 async function main(): Promise<void> {
   const env = loadEnv();
   const db = openDb(env.dbPath);
+  acquireEngineLock(env.dbPath);
 
   const exchange = new SomniaMarkets({
     indexerUrl: env.indexerUrl,
@@ -73,6 +75,7 @@ async function main(): Promise<void> {
         console.error(`agent shutdown error: ${errText(err).split("\n")[0]}`);
       })
       .finally(() => {
+        releaseEngineLock(env.dbPath);
         db.close();
         process.exit(0);
       });
