@@ -8,6 +8,7 @@ import type {
   FillRow,
   MarketRow,
   PnlSnapshotRow,
+  ReasoningRow,
   SweeperResultRow,
 } from "@certus/shared";
 
@@ -85,6 +86,18 @@ create table if not exists sweeper_results (
   createdAt integer not null
 );
 create index if not exists idx_sweeper_results on sweeper_results (agentKind, createdAt);
+create table if not exists reasoning (
+  id integer primary key autoincrement,
+  agentKind text not null,
+  marketId text not null,
+  observation text not null,
+  thought text not null,
+  action text not null,
+  confidence real not null,
+  source text not null,
+  createdAt integer not null
+);
+create index if not exists idx_reasoning on reasoning (agentKind, createdAt);
 `;
 
 export type Db = Database.Database;
@@ -239,6 +252,13 @@ export function rescuedTotals(db: Db): Record<string, bigint> {
     out[r.agentKind] = BigInt(r.total ?? "0");
   }
   return out;
+}
+
+export function insertReasoningRow(db: Db, row: ReasoningRow): void {
+  db.prepare(
+    `insert into reasoning (agentKind, marketId, observation, thought, action, confidence, source, createdAt)
+     values (@agentKind, @marketId, @observation, @thought, @action, @confidence, @source, @createdAt)`,
+  ).run(row);
 }
 
 export function fillCount(db: Db): number {
