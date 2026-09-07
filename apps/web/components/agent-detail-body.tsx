@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { AgentDetail } from "@/lib/queries";
 import { usePolling } from "@/lib/use-polling";
 import { Sparkline } from "./sparkline";
