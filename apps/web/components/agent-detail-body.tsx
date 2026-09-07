@@ -3,7 +3,7 @@
 import type { AgentDetail } from "@/lib/queries";
 import { usePolling } from "@/lib/use-polling";
 import { Sparkline } from "./sparkline";
-import { AGENTS } from "@certus/shared";
+import { AGENTS } from "@certus/shared/types";
 
 const EXPLORER = process.env.NEXT_PUBLIC_EXPLORER_URL ?? "https://shannon-explorer.somnia.network";
 const ORACLE_PREFIX = "https://prd.oracle.somnia.host/questions/";
