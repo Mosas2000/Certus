@@ -34,3 +34,18 @@ export const ORDER_EXPIRY_SEC = 300;
 export const MIN_SECONDS_TO_EXPIRY = 300;
 export const TESTNET_COLLATERAL_DECIMALS = 6;
 export const MAINNET_COLLATERAL_DECIMALS = 18;
+
+export const DEFAULT_LLM_BASE_URL = "https://openrouter.ai/api/v1";
+export const DEFAULT_LLM_MODEL = "x-ai/grok-4.5";
+
+export function providerLabel(baseUrl: string): string {
+  try {
+    const host = new URL(baseUrl).hostname;
+    if (host === "openrouter.ai") return "openrouter";
+    if (host === "api.x.ai") return "grok";
+    if (host === "api.openai.com") return "openai";
+    return host.split(".")[0] ?? "llm";
+  } catch {
+    return "llm";
+  }
+}

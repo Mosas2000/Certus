@@ -122,7 +122,7 @@ export interface ReasoningRow {
   thought: string;
   action: string;
   confidence: number;
-  source: "anthropic" | "fallback";
+  source: string;
   createdAt: number;
 }
 

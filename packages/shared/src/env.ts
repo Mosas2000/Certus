@@ -3,6 +3,8 @@ import { dirname, join, resolve } from "node:path";
 import { config } from "dotenv";
 import {
   DEFAULT_INDEXER_URL,
+  DEFAULT_LLM_BASE_URL,
+  DEFAULT_LLM_MODEL,
   DEFAULT_RPC_URL,
   DEFAULT_VENUE_ID,
   DEFAULT_WS_RPC_URL,
@@ -21,7 +23,9 @@ export interface CertusEnv {
   claimScan: number;
   sweepIntervalMs: number;
   agentKeys: Record<string, `0x${string}` | undefined>;
-  anthropicApiKey: string | undefined;
+  llmApiKey: string | undefined;
+  llmBaseUrl: string;
+  llmModel: string;
 }
 
 function findRepoRoot(start: string): string {
@@ -87,9 +91,11 @@ export function loadEnv(): CertusEnv {
     claimScan: readInt("CLAIM_SCAN", 20),
     sweepIntervalMs: readInt("SWEEP_INTERVAL_MS", 600_000),
     agentKeys,
-    anthropicApiKey:
-      process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== ""
-        ? process.env.ANTHROPIC_API_KEY
+    llmApiKey:
+      process.env.LLM_API_KEY && process.env.LLM_API_KEY !== ""
+        ? process.env.LLM_API_KEY
         : undefined,
+    llmBaseUrl: process.env.LLM_BASE_URL ?? DEFAULT_LLM_BASE_URL,
+    llmModel: process.env.LLM_MODEL ?? DEFAULT_LLM_MODEL,
   };
 }

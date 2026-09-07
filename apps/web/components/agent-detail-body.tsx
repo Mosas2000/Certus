@@ -101,7 +101,7 @@ function Reasoning({ rows }: { rows: AgentDetail["reasoning"] }) {
         <li key={`${r.createdAt}-${i}`} className="reasoning-row">
           <div className="reasoning-head">
             <span className="dim">{fmtTime(r.createdAt)}</span>
-            <span className={`pill ${r.source === "anthropic" ? "pill-live" : "pill-dim"}`}>{r.source}</span>
+            <span className={`pill ${r.source !== "fallback" ? "pill-live" : "pill-dim"}`}>{r.source}</span>
             <span className="reasoning-conf">{(r.confidence * 100).toFixed(0)}%</span>
           </div>
           <p className="reasoning-thought">{r.thought}</p>

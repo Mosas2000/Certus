@@ -1,6 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { MarketOnchain } from "@somnia-chain/markets-sdk";
-import { errText, type CertusEnv } from "@certus/shared";
+import { errText, providerLabel, type CertusEnv } from "@certus/shared";
 import { insertReasoningRow, type Db } from "../db.js";
 import type { Decision, Harness } from "../harness.js";
 import type { TradingConfig } from "../config.js";
@@ -97,53 +96,75 @@ function proposalToDecision(p: Proposal, marketId: `0x${string}`): Decision {
   };
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
 export class LlmStrategy implements AgentStrategy {
   readonly tickIntervalMs = 60_000;
   private readonly config: TradingConfig;
   private readonly apiKey: string | undefined;
+  private readonly baseUrl: string;
   private readonly model: string;
+  private readonly source: string;
   private readonly db: Db;
-  private client: Anthropic | null = null;
   private openingMid: { marketId: string; mid: number } | null = null;
   private lastSentAt = 0;
   private parseErrors = 0;
 
   constructor(config: TradingConfig, env: CertusEnv, db: Db) {
     this.config = config;
-    this.apiKey = env.anthropicApiKey;
-    this.model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5";
+    this.apiKey = env.llmApiKey;
+    this.baseUrl = env.llmBaseUrl.replace(/\/+$/, "");
+    this.model = env.llmModel;
+    this.source = providerLabel(env.llmBaseUrl);
     this.db = db;
   }
 
-  async decide(observation: Observation): Promise<{ proposal: Proposal; source: "anthropic" | "fallback" }> {
+  async decide(observation: Observation): Promise<{ proposal: Proposal; source: string }> {
     if (this.apiKey) {
       try {
-        const proposal = await this.callAnthropic(observation);
-        if (proposal) return { proposal, source: "anthropic" };
+        const proposal = await this.callModel(observation);
+        if (proposal) return { proposal, source: this.source };
       } catch (err) {
         console.error(
-          `[agent llm] ANTHROPIC CALL FAILED, falling back this tick: ${errText(err).split("\n")[0]}`,
+          `[agent llm] MODEL CALL FAILED (${this.source}/${this.model}), falling back this tick: ${errText(err).split("\n")[0]}`,
         );
       }
     }
     return { proposal: this.fallbackDecide(observation), source: "fallback" };
   }
 
-  async callAnthropic(observation: Observation): Promise<Proposal | null> {
+  async callModel(observation: Observation): Promise<Proposal | null> {
     if (!this.apiKey) return null;
-    if (this.client === null) {
-      this.client = new Anthropic({ apiKey: this.apiKey });
-    }
-    const res = await this.client.messages.create({
-      model: this.model,
-      max_tokens: 400,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: JSON.stringify(observation) }],
+    const res = await fetch(`${this.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${this.apiKey}`,
+        "content-type": "application/json",
+        "x-title": "Certus",
+      },
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: 400,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: JSON.stringify(observation) },
+        ],
+      }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
-    const text = res.content
-      .map((block) => (block.type === "text" ? block.text : ""))
-      .join("")
-      .trim();
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    }
+    const json = (await res.json()) as {
+      choices?: { message?: { content?: unknown } }[];
+    };
+    const content = json.choices?.[0]?.message?.content;
+    const text = (typeof content === "string"
+      ? content
+      : Array.isArray(content)
+        ? content.map((p) => (p && typeof p === "object" && "text" in p ? String((p as { text: unknown }).text) : "")).join("")
+        : ""
+    ).trim();
     const proposal = parseProposal(text);
     if (!proposal) {
       this.parseErrors += 1;
