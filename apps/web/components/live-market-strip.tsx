@@ -23,17 +23,17 @@ function fmtCountdown(secondsLeft: number): string {
   return `${m}m${s.toString().padStart(2, "0")}s`;
 }
 
-function MarketTile({ marketId, asset, intervalSec, expiry }: {
+function MarketTile({ marketId, asset, intervalSec, expiry, decimals }: {
   marketId: string;
   asset: string;
   intervalSec: number;
   expiry: number;
+  decimals: number;
 }) {
   const now = useNow(1000);
   const book = useLiveBinaryOrderBookByMarket(marketId, 1);
   const secondsLeft = Math.floor(expiry - now / 1000);
 
-  const decimals = 6;
   const bid = book?.yesBids?.[0]?.price;
   const ask = book?.yesAsks?.[0]?.price;
   const bidProb = bid !== undefined ? Number(bid) / 10 ** decimals : null;
@@ -67,7 +67,7 @@ function pickCurrent(
   markets: Market[],
   asset: string,
   nowSec: number,
-): { marketId: string; intervalSec: number; expiry: number } | null {
+): { marketId: string; intervalSec: number; expiry: number; decimals: number } | null {
   const live = markets
     .filter(isBinaryMarket)
     .filter(
@@ -81,7 +81,12 @@ function pickCurrent(
     .sort((a, b) => Number(a.expiry) - Number(b.expiry));
   const pick = live[0];
   if (!pick || pick.intervalSec === null) return null;
-  return { marketId: pick.marketId, intervalSec: Number(pick.intervalSec), expiry: Number(pick.expiry) };
+  return {
+    marketId: pick.marketId,
+    intervalSec: Number(pick.intervalSec),
+    expiry: Number(pick.expiry),
+    decimals: pick.quoteDecimals,
+  };
 }
 
 export function LiveMarketStrip() {
@@ -103,6 +108,7 @@ export function LiveMarketStrip() {
             asset={asset}
             intervalSec={market.intervalSec}
             expiry={market.expiry}
+            decimals={market.decimals}
           />
         ) : (
           <div key={asset} className="market-tile market-tile-empty">

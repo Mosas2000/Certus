@@ -34,8 +34,8 @@ function TradeTape({ fills }: { fills: AgentDetail["fills"] }) {
             <td>{fmtTime(f.filledAt)}</td>
             <td>{f.symbol !== "" ? f.symbol : f.marketId.slice(2, 10)}</td>
             <td className={f.side.startsWith("BUY") ? "side-buy" : "side-sell"}>{f.side}</td>
-            <td>{(Number(f.price) / 1e6).toFixed(3)}</td>
-            <td>{(Number(f.quantity) / 1e6).toFixed(2)}</td>
+            <td>{(Number(f.price) / 10 ** f.decimals).toFixed(3)}</td>
+            <td>{(Number(f.quantity) / 10 ** f.decimals).toFixed(2)}</td>
             <td>
               <a href={`${EXPLORER}/tx/${f.txHash}`} target="_blank" rel="noreferrer">
                 {f.txHash.slice(0, 8)}…

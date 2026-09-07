@@ -29,7 +29,7 @@ export interface AgentCard {
 
 export interface AgentDetail {
   card: AgentCard;
-  fills: FillRow[];
+  fills: (FillRow & { decimals: number })[];
   balances: {
     marketId: string;
     asset: string;
@@ -46,6 +46,19 @@ export interface LeaderboardRow extends AgentCard {
   rank: number;
 }
 
+const FALLBACK_COLLATERAL_DECIMALS = 6;
+
+function collateralDecimals(db: Database.Database): number {
+  const row = db
+    .prepare(`select quoteDecimals from markets where quoteDecimals > 0 order by expiry desc limit 1`)
+    .get() as { quoteDecimals: number } | undefined;
+  return row?.quoteDecimals ?? FALLBACK_COLLATERAL_DECIMALS;
+}
+
+function scaleOf(db: Database.Database): number {
+  return 10 ** collateralDecimals(db);
+}
+
 function latestWalletCollateral(db: Database.Database, kind: AgentKind): { series: EquityPoint[] } {
   const rows = db
     .prepare(
@@ -53,26 +66,34 @@ function latestWalletCollateral(db: Database.Database, kind: AgentKind): { serie
        where agentKind = ? and marketId = '' order by capturedAt asc limit 500`,
     )
     .all(kind) as { capturedAt: number; collateralBalance: string }[];
+  const scale = scaleOf(db);
   return {
-    series: rows.map((r) => ({ at: r.capturedAt, collateral: Number(r.collateralBalance) / 1e6 })),
+    series: rows.map((r) => ({ at: r.capturedAt, collateral: Number(r.collateralBalance) / scale })),
   };
 }
 
 function openPosition(db: Database.Database, kind: AgentKind): number {
   const rows = db
     .prepare(
-      `select b.marketId, b.capturedAt, b.yesBalance, b.noBalance
+      `select b.marketId, b.capturedAt, b.yesBalance, b.noBalance, m.quoteDecimals
        from balance_snapshots b
        join markets m on m.marketId = b.marketId
        where b.agentKind = ? and m.status = 'Trading'
        order by b.capturedAt asc`,
     )
-    .all(kind) as { marketId: string; capturedAt: number; yesBalance: string; noBalance: string }[];
+    .all(kind) as {
+    marketId: string;
+    capturedAt: number;
+    yesBalance: string;
+    noBalance: string;
+    quoteDecimals: number;
+  }[];
   const latest = new Map<string, { yes: number; no: number }>();
   for (const r of rows) {
+    const scale = 10 ** r.quoteDecimals;
     latest.set(r.marketId, {
-      yes: Number(r.yesBalance) / 1e6,
-      no: Number(r.noBalance) / 1e6,
+      yes: Number(r.yesBalance) / scale,
+      no: Number(r.noBalance) / scale,
     });
   }
   let total = 0;
@@ -83,14 +104,14 @@ function openPosition(db: Database.Database, kind: AgentKind): number {
 function winStats(db: Database.Database, kind: AgentKind): { wins: number; losses: number; realized: number } {
   const rows = db
     .prepare(
-      `select p.marketId, p.capturedAt, p.realized from pnl_snapshots p
+      `select p.marketId, p.capturedAt, p.realized, m.quoteDecimals from pnl_snapshots p
        join markets m on m.marketId = p.marketId
        where p.agentKind = ? and m.status = 'Finalized' and p.realized is not null
        order by p.capturedAt asc`,
     )
-    .all(kind) as { marketId: string; capturedAt: number; realized: string }[];
+    .all(kind) as { marketId: string; capturedAt: number; realized: string; quoteDecimals: number }[];
   const latest = new Map<string, number>();
-  for (const r of rows) latest.set(r.marketId, Number(r.realized) / 1e6);
+  for (const r of rows) latest.set(r.marketId, Number(r.realized) / 10 ** r.quoteDecimals);
   let wins = 0;
   let losses = 0;
   let realized = 0;
@@ -110,10 +131,15 @@ function fillCount(db: Database.Database, kind: AgentKind): number {
 }
 
 function rescued(db: Database.Database, kind: AgentKind): number {
-  const row = db
-    .prepare(`select coalesce(sum(rescued), 0) as total from sweeper_results where agentKind = ?`)
-    .get(kind) as { total: number };
-  return row.total / 1e6;
+  const rows = db
+    .prepare(
+      `select s.rescued, m.quoteDecimals from sweeper_results s
+       join markets m on m.marketId = s.marketId where s.agentKind = ?`,
+    )
+    .all(kind) as { rescued: string; quoteDecimals: number }[];
+  let total = 0;
+  for (const r of rows) total += Number(r.rescued) / 10 ** r.quoteDecimals;
+  return total;
 }
 
 function agentState(
@@ -165,14 +191,13 @@ export function getAgentDetail(kind: AgentKind): AgentDetail | null {
   if (!db) return null;
   const card = getAgentCard(db, kind);
 
-  const fills = (
-    db
-      .prepare(
-        `select id, marketId, agentKind, txHash, symbol, side, price, quantity, quoteQuantity, filledAt
-         from fills where agentKind = ? order by filledAt desc limit 50`,
-      )
-      .all(kind) as FillRow[]
-  ).map((f) => ({ ...f, price: f.price }));
+  const fills = db
+    .prepare(
+      `select f.id, f.marketId, f.agentKind, f.txHash, f.symbol, f.side, f.price, f.quantity, f.quoteQuantity, f.filledAt, m.quoteDecimals as decimals
+       from fills f join markets m on m.marketId = f.marketId
+       where f.agentKind = ? order by f.filledAt desc limit 50`,
+    )
+    .all(kind) as (FillRow & { decimals: number })[];
 
   const balanceRows = db
     .prepare(
@@ -190,18 +215,25 @@ export function getAgentDetail(kind: AgentKind): AgentDetail | null {
     .map(([marketId, b]) => {
       const market = db
         .prepare(
-          `select asset, intervalSec, status, oracleQuestionId from markets where marketId = ?`,
+          `select asset, intervalSec, status, oracleQuestionId, quoteDecimals from markets where marketId = ?`,
         )
         .get(marketId) as
-        | { asset: string; intervalSec: number | null; status: string; oracleQuestionId: string | null }
-        | undefined;
+        | {
+            asset: string;
+            intervalSec: number | null;
+            status: string;
+            oracleQuestionId: string | null;
+            quoteDecimals: number;
+          }
+          | undefined;
+      const scale = 10 ** (market?.quoteDecimals ?? FALLBACK_COLLATERAL_DECIMALS);
       return {
         marketId,
         asset: market?.asset ?? "?",
         intervalSec: market?.intervalSec ?? null,
         status: market?.status ?? "?",
-        yesBalance: Number(b.yes) / 1e6,
-        noBalance: Number(b.no) / 1e6,
+        yesBalance: Number(b.yes) / scale,
+        noBalance: Number(b.no) / scale,
         oracleQuestionId: market?.oracleQuestionId ?? null,
       };
     })
@@ -237,14 +269,14 @@ function scopedCard(db: Database.Database, kind: AgentKind, asset: string): Agen
   const base = getAgentCard(db, kind);
   const rows = db
     .prepare(
-      `select p.marketId, p.capturedAt, p.realized from pnl_snapshots p
+      `select p.marketId, p.capturedAt, p.realized, m.quoteDecimals from pnl_snapshots p
        join markets m on m.marketId = p.marketId
        where p.agentKind = ? and m.status = 'Finalized' and m.asset = ? and p.realized is not null
        order by p.capturedAt asc`,
     )
-    .all(kind, asset) as { marketId: string; capturedAt: number; realized: string }[];
+    .all(kind, asset) as { marketId: string; capturedAt: number; realized: string; quoteDecimals: number }[];
   const latest = new Map<string, number>();
-  for (const r of rows) latest.set(r.marketId, Number(r.realized) / 1e6);
+  for (const r of rows) latest.set(r.marketId, Number(r.realized) / 10 ** r.quoteDecimals);
   let wins = 0;
   let losses = 0;
   let realized = 0;
@@ -262,15 +294,15 @@ function scopedCard(db: Database.Database, kind: AgentKind, asset: string): Agen
       )
       .get(kind, asset) as { n: number }
   ).n;
-  const rescuedScoped = (
-    db
-      .prepare(
-        `select coalesce(sum(s.rescued), 0) as total from sweeper_results s
-         join markets m on m.marketId = s.marketId
-         where s.agentKind = ? and m.asset = ?`,
-      )
-      .get(kind, asset) as { total: number }
-  ).total / 1e6;
+  const rescuedRows = db
+    .prepare(
+      `select s.rescued, m.quoteDecimals from sweeper_results s
+       join markets m on m.marketId = s.marketId
+       where s.agentKind = ? and m.asset = ?`,
+    )
+    .all(kind, asset) as { rescued: string; quoteDecimals: number }[];
+  let rescuedScoped = 0;
+  for (const r of rescuedRows) rescuedScoped += Number(r.rescued) / 10 ** r.quoteDecimals;
   return {
     ...base,
     trades: fills,
