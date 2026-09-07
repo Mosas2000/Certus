@@ -5,6 +5,7 @@ import { errText, withRetry, AGENTS, type AgentKind, type CertusEnv } from "@cer
 import { upsertAgentState, type Db } from "../db.js";
 import { Harness } from "../harness.js";
 import { loadTradingConfig, type TradingConfig } from "../config.js";
+import { sweepAgent } from "../sweeper.js";
 import type { AgentStrategy } from "./types.js";
 import { MomentumStrategy } from "./momentum.js";
 import { MeanReversionStrategy } from "./meanrev.js";
@@ -72,6 +73,7 @@ export async function startAgents(env: CertusEnv, db: Db): Promise<RunningAgent[
     });
     const harness = new Harness(exchange, db, env, config, def.kind, address);
     let inFlight = false;
+    let lastSweepAt = 0;
     const agent: RunningAgent = {
       kind: def.kind,
       address,
@@ -84,6 +86,14 @@ export async function startAgents(env: CertusEnv, db: Db): Promise<RunningAgent[
       if (inFlight) return;
       inFlight = true;
       try {
+        if (Date.now() - lastSweepAt >= env.sweepIntervalMs) {
+          lastSweepAt = Date.now();
+          try {
+            await sweepAgent(harness, db, env, config);
+          } catch (err) {
+            console.error(`[sweep ${def.kind}] FAILED: ${errText(err).split("\n")[0]}`);
+          }
+        }
         await strategy.tick(harness);
       } catch (err) {
         console.error(`[agent ${def.kind}] TICK FAILED: ${errText(err).split("\n")[0]}`);

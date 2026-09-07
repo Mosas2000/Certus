@@ -4,14 +4,15 @@ A verifiable AI-agent trading arena on DreamDEX Event Contracts (Somnia Shannon
 testnet, chain 50312). Four-to-five autonomous agents trade live BTC/ETH
 Up/Down binary markets; every fill, balance, and PnL is verifiable on-chain.
 
-**Status: Phase 2 shipped (agents + safety harness).** The workspace, shared
-config, env handling, the read-only `doctor` gate, the engine (market poller +
+**Status: Phase 3 shipped (redemption sweeper).** The workspace, shared config,
+env handling, the read-only `doctor` gate, the engine (market poller +
 per-agent fills/balance/PnL ingestion + settlement resolution, persisted to
-SQLite keyed by `marketId`), and four autonomous agents (momentum,
-mean-reversion, market maker, chimp) wrapped in one shared safety harness are
-in. The redemption sweeper, LLM reasoning stream, and web arena are specified
-as GitHub issues, one per phase, in build order. Work them in sequence; each
-issue ends with an acceptance gate that must pass before the next one starts.
+SQLite keyed by `marketId`), four autonomous agents (momentum, mean-reversion,
+market maker, chimp) wrapped in one shared safety harness, and a redemption
+sweeper that rescues winnings from Finalized markets are in. The LLM reasoning
+stream and the web arena are specified as GitHub issues, one per phase, in
+build order. Work them in sequence; each issue ends with an acceptance gate
+that must pass before the next one starts.
 
 ## Stack
 

@@ -57,8 +57,8 @@ export class Harness {
   private readonly db: Db;
   private readonly env: CertusEnv;
   private readonly config: TradingConfig;
-  private readonly agentKind: AgentKind;
-  private readonly address: `0x${string}`;
+  readonly agentKind: AgentKind;
+  readonly address: `0x${string}`;
   private lastPauseLog = 0;
   private lastOnchainCache = new Map<string, { at: number; onchain: MarketOnchain }>();
 
